@@ -1,4 +1,17 @@
 node_modules
+
+# IntelliJ
 .idea/
+*.iml
+
+# VSCode
 .vscode/
+
+# Angular
 .angular/
+
+# Maven
+target
+
+# Environment
+.env
