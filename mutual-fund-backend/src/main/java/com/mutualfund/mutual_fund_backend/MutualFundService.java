@@ -12,26 +12,22 @@ public class MutualFundService {
     //TODO: fxn to calculate future value (given formula)
     public double calculateFutureVal(String ticker, double principal, int years) {
         double presentValue = principal;
-        double returnRate = calculateExpectedReturnRate(ticker, principal, years);
-        double futureValue = presentValue * Math.pow((1 + returnRate), years);
+        double futureValue = presentValue * Math.exp(getrate(ticker) * years);
         return futureValue; 
     }
-    //TODO: fxn to calculate expected return rate from last year of mutual fund data
-    public double calculateExpectedReturnRate(String ticker, double principal, int years) {
-        double expectedReturnRate = 0; //TODO replace
-        Optional<Double> beta = getBetaFromNewtonApi(ticker);
-        double riskFreeRate = calculateRiskFreeRate();
-        double marketReturn = calculateMarketReturn(); 
-        if (beta.isPresent()) {
-            expectedReturnRate = riskFreeRate + beta.get() * (marketReturn - riskFreeRate);
+
+    private double getrate(String ticker) {
+        double beta = getBetaFromNewtonApi(ticker).orElse(1.0);
+        return 0.049 + beta * (calculateExpectedReturnRate(ticker) - 0.049);
+    }
+    private double calculateExpectedReturnRate(String ticker) {
+        try {
+            MutualFundData fundData = new MutualFundData(ticker);
+            return fundData.getAverageChange() / 100.0;
+        } catch (Exception e) {
+            System.err.println("Failed to fetch market return for " + ticker + ": " + e.getMessage());
+            return 0.0; // fallback
         }
-        return expectedReturnRate;
-    }
-    private double calculateRiskFreeRate() {        
-        return 0.02; //TODO replace with actual risk free rate
-    }
-    private double calculateMarketReturn() {        
-        return 0.07; //TODO replace with actual market return
     }
 
     // fxn to get beta from Newton API 

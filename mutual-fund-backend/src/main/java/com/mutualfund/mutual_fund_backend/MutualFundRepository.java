@@ -7,5 +7,4 @@ import org.springframework.stereotype.Repository;
  * Talks to AWS database
  */
 public class MutualFundRepository {
-    spring.datasource.url = jdcb:posgresl://
 }
