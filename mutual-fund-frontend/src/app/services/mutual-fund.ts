@@ -1,15 +1,24 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-@Injectable({
-  providedIn: 'root',
-})
+export interface MutualFundInfo {
+  ticker: string;
+  name: string;
+}
 
-export class MutualFund {
-  private apiUrl = 'http://localhost:4200'; 
+@Injectable({ providedIn: 'root' })
+export class MutualFundService {
+  private http = inject(HttpClient);
+  private baseUrl = 'http://localhost:8080/api';
 
-  constructor(private http: HttpClient) {}
-  getMutualFunds(): Observable<any[]> {
-    return this.http.get<any[]>(this.apiUrl);
+  getFunds(): Observable<MutualFundInfo[]> {
+    return this.http.get<MutualFundInfo[]>(`${this.baseUrl}/funds`);
+  }
+
+  getFutureValue(ticker: string, principal: number, years: number): Observable<number> {
+    return this.http.get<number>(`${this.baseUrl}/futureVal`, {
+      params: { ticker, principal, years }
+    });
+  }
 }

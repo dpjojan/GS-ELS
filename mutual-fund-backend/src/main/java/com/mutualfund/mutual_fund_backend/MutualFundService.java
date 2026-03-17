@@ -1,10 +1,14 @@
 package com.mutualfund.mutual_fund_backend;
 
+import org.springframework.stereotype.Service;
+
 import java.util.Optional;
 
 /**
  * Business logic for mutual fund (eg. calculations)
  */
+
+@Service
 public class MutualFundService {
 
     private final NewtonStockBetaClient newtonStockBetaClient = new NewtonStockBetaClient();
