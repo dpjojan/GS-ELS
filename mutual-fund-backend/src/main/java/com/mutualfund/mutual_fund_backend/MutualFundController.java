@@ -22,6 +22,11 @@ public class MutualFundController {
     @Autowired // SpringBoot creates an instance of MutualFundService to use
     private MutualFundService mutualFundService;
 
+    // Spring will automatically create and inject GeminiService
+    // so we can use it inside this controller
+    @Autowired
+    private GeminiService geminiService;
+
     // when frontend requests mutual funds, return this list of hardcoded funds
     @GetMapping("/funds")
     public ArrayList<MutualFund> getFunds() {
@@ -43,6 +48,13 @@ public class MutualFundController {
         @RequestParam int years){
             return mutualFundService.calculateFutureVal(ticker, principal, years);
     }
+
+    // maps HTTP GET requests to "/gemini-test"
+    @GetMapping("/gemini-test")
+    public String testGemini() {
+    // Calling the geminiService to generate a response
+    return geminiService.testGemini("Explain mutual funds in one sentence");
+}
 
 
 }
