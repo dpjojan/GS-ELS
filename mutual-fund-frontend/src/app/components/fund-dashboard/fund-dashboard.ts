@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MutualFundService, MutualFundInfo } from '../../services/mutual-fund';
@@ -295,6 +295,7 @@ interface YearRow {
 })
 export class FundDashboard implements OnInit {
   private service = inject(MutualFundService);
+  private cdr = inject(ChangeDetectorRef);
 
   // Fund lists
   allFunds: MutualFundInfo[] = [];
@@ -351,6 +352,7 @@ export class FundDashboard implements OnInit {
       next: (funds) => {
         this.allFunds = funds;
         this.loadingFunds = false;
+        this.cdr.detectChanges();
       },
       error: () => {
         // Fallback if backend not running
@@ -363,6 +365,7 @@ export class FundDashboard implements OnInit {
           { ticker: 'SWLGX', name: 'Schwab Large Cap Growth Fund' },
         ];
         this.loadingFunds = false;
+        this.cdr.detectChanges();
       }
     });
   }
@@ -405,6 +408,7 @@ export class FundDashboard implements OnInit {
 
       this.loading = false;
       this.showResults = true;
+      this.cdr.detectChanges();
     });
   }
 

@@ -18,7 +18,7 @@ for i in range(NUM_YEARS, 0, -1):
     history = ticker.history(start=start.strftime("%Y-%m-%d"),
                              end=end.strftime("%Y-%m-%d"),
                              interval="1d",
-                             auto_adjust=False)
+                             auto_adjust=True)
 
     if history.empty:
         continue

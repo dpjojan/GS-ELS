@@ -2,6 +2,8 @@ package com.mutualfund.mutual_fund_backend;
 
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.Optional;
 
 /**
@@ -12,17 +14,20 @@ import java.util.Optional;
 public class MutualFundService {
 
     private final NewtonStockBetaClient newtonStockBetaClient = new NewtonStockBetaClient();
+    private final Map<String, Double> rateCache = new ConcurrentHashMap<>();
 
     //TODO: fxn to calculate future value (given formula)
     public double calculateFutureVal(String ticker, double principal, int years) {
         double presentValue = principal;
         double futureValue = presentValue * Math.exp(getrate(ticker) * years);
-        return futureValue; 
+        return futureValue;
     }
 
     private double getrate(String ticker) {
-        double beta = getBetaFromNewtonApi(ticker).orElse(1.0);
-        return 0.049 + beta * (calculateExpectedReturnRate(ticker) - 0.049);
+        return rateCache.computeIfAbsent(ticker, t -> {
+            double beta = getBetaFromNewtonApi(t).orElse(1.0);
+            return 0.049 + beta * (calculateExpectedReturnRate(t) - 0.049);
+        });
     }
     private double calculateExpectedReturnRate(String ticker) {
         try {
