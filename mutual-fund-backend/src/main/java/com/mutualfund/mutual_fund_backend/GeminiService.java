@@ -1,5 +1,7 @@
 package com.mutualfund.mutual_fund_backend;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -13,11 +15,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @Service // Marks this as a service component (Spring will manage it)
 public class GeminiService {
 
+    private static final Logger log = LoggerFactory.getLogger(GeminiService.class);
+
     // Injects your API key from application.properties
     @Value("${gemini.api.key}")
     private String apiKey;
 
     public String testGemini(String prompt) {
+        log.info("Sending prompt to Gemini: \"{}\"", prompt);
         try {
             // Build the request body in the format Gemini expects
             // "contents" → main wrapper
@@ -62,11 +67,12 @@ public class GeminiService {
                 .path("text")
                 .asText();
 
+        log.info("Gemini response received: \"{}\"", output);
         return output;
 
-        } 
+        }
         catch (Exception e) {
-            // If anything fails (network, bad request, etc.), return error message
+            log.error("Gemini API call failed: {}", e.getMessage());
             return "Error calling Gemini: " + e.getMessage();
         }
     }

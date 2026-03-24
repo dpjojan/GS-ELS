@@ -1,6 +1,7 @@
 package com.mutualfund.mutual_fund_backend;
 
 import org.junit.jupiter.api.Test;
+import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 class FutureValTest {
@@ -11,14 +12,19 @@ class FutureValTest {
 
         double principal = 10_000.0;
         int years = 10;
-        double result = service.calculateFutureVal("VFIAX", principal, years);
+        List<Double> results = service.calculateFutureValAllYears("VFIAX", principal, years);
 
         System.out.println("Ticker    : VFIAX");
         System.out.println("Principal : $" + principal);
         System.out.println("Years     : " + years);
-        System.out.printf("Future Val: $%.2f%n", result);
+        for (int i = 0; i < results.size(); i++) {
+            System.out.printf("Year %2d   : $%.2f%n", i + 1, results.get(i));
+        }
 
-        assertTrue(result > 0);
-        assertFalse(Double.isNaN(result));
+        assertEquals(years, results.size());
+        results.forEach(val -> {
+            assertTrue(val > 0);
+            assertFalse(Double.isNaN(val));
+        });
     }
 }

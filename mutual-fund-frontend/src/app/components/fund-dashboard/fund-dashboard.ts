@@ -93,7 +93,7 @@ interface YearRow {
           <button
             class="calc-btn"
             (click)="calculate()"
-            [disabled]="loading"
+            [disabled]="loading || !!errorMessage"
           >
             {{ loading ? 'Calculating...' : 'Calculate Future Value' }}
           </button>
@@ -313,7 +313,7 @@ export class FundDashboard implements OnInit {
   selectedTicker = '';
   principal = 10000;
   years = 5;
-  yearOptions = [1, 2, 3, 5, 7, 10, 15, 20, 25, 30];
+  yearOptions = [1, 2, 3, 5, 7, 10, 15, 20];
 
   // State
   loading = false;
@@ -381,41 +381,32 @@ export class FundDashboard implements OnInit {
 
     // The backend only returns the final future value for the full duration.
     // We call it once per year (year 1 through N) to build the chart.
-    const calls: Promise<number>[] = [];
-    for (let y = 1; y <= this.years; y++) {
-      calls.push(
-        new Promise((resolve) => {
-          this.service.getFutureValue(this.selectedTicker, this.principal, y).subscribe({
-            next: (val) => resolve(val),
-            error: () => resolve(this.fallbackFV(this.principal, y)), // if backend down
-          });
-        })
-      );
-    }
+    this.service.getFutureValueAllYears(this.selectedTicker, this.principal, this.years).subscribe({
+      next: (values) => {
+        this.yearRows = values.map((fv, i) => ({
+          year: i + 1,
+          futureValue: fv,
+          profit: fv - this.principal,
+          profitPercent: ((fv - this.principal) / this.principal) * 100,
+        }));
 
-    Promise.all(calls).then((values) => {
-      this.yearRows = values.map((fv, i) => ({
-        year: i + 1,
-        futureValue: fv,
-        profit: fv - this.principal,
-        profitPercent: ((fv - this.principal) / this.principal) * 100,
-      }));
+        this.finalValue = this.yearRows[this.yearRows.length - 1].futureValue;
+        this.finalProfit = this.finalValue - this.principal;
+        this.totalGrowthPct = (this.finalProfit / this.principal) * 100;
+        this.maxValue = Math.max(...this.yearRows.map(r => r.futureValue));
 
-      this.finalValue = this.yearRows[this.yearRows.length - 1].futureValue;
-      this.finalProfit = this.finalValue - this.principal;
-      this.totalGrowthPct = (this.finalProfit / this.principal) * 100;
-      this.maxValue = Math.max(...this.yearRows.map(r => r.futureValue));
-
-      this.loading = false;
-      this.showResults = true;
-      this.cdr.detectChanges();
+        this.loading = false;
+        this.showResults = true;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.errorMessage = 'Unable to calculate future value.';
+        this.loading = false;
+        this.cdr.detectChanges();
+      }
     });
   }
 
-  // Used as fallback if backend is unreachable
-  private fallbackFV(principal: number, years: number): number {
-    return principal * Math.pow(1.10, years);
-  }
 
   formatMoney(n: number): string {
     return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });

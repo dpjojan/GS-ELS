@@ -1,10 +1,17 @@
 package com.mutualfund.mutual_fund_backend;
 
 import java.util.ArrayList;
+import java.util.Map;
 
+import org.springframework.http.ResponseEntity;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,7 +25,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api")
 public class MutualFundController {
-    
+
+    private static final Logger log = LoggerFactory.getLogger(MutualFundController.class);
+
     @Autowired // SpringBoot creates an instance of MutualFundService to use
     private MutualFundService mutualFundService;
 
@@ -30,6 +39,7 @@ public class MutualFundController {
     // when frontend requests mutual funds, return this list of hardcoded funds
     @GetMapping("/funds")
     public ArrayList<MutualFund> getFunds() {
+        log.info("GET /funds requested");
         ArrayList<MutualFund> fundsList = new ArrayList<>();
         fundsList.add(new MutualFund("VBTLX", "Vanguard Total Bond Market Index Fund"));
         fundsList.add(new MutualFund("SWAGX", "Schwab US Aggregate Bond Index Fund"));
@@ -40,21 +50,33 @@ public class MutualFundController {
         return fundsList;
     }
     
-    // when frontend requests future val of a ticker given principal and length of time, return the expected future value
-    @GetMapping("/futureVal")
-    public double getFutureVal( //change to Map<String,Object> if want to send additional information back
+    @GetMapping("/futureValAll")
+    public ResponseEntity<?> getFutureValAll(
         @RequestParam String ticker,
         @RequestParam double principal,
         @RequestParam int years){
-            return mutualFundService.calculateFutureVal(ticker, principal, years);
+            log.info("GET /futureValAll - ticker={}, principal={}, years={}", ticker, principal, years);
+            try {
+                return ResponseEntity.ok(mutualFundService.calculateFutureValAllYears(ticker, principal, years));
+            } catch (RuntimeException e) {
+                log.error("Failed to calculate future values for {}: {}", ticker, e.getMessage());
+                return ResponseEntity.internalServerError().body(e.getMessage());
+            }
     }
 
     // maps HTTP GET requests to "/gemini-test"
     @GetMapping("/gemini-test")
     public String testGemini() {
-    // Calling the geminiService to generate a response
-    return geminiService.testGemini("Explain mutual funds in one sentence");
-}
+        return geminiService.testGemini("Explain mutual funds in one sentence");
+    }
+
+    // receives a message from the Angular chatbot and returns Gemini's response
+    @PostMapping("/chat")
+    public String chat(@RequestBody Map<String, String> body) {
+        String message = body.get("message");
+        log.info("POST /chat - message=\"{}\"", message);
+        return geminiService.testGemini(message);
+    }
 
 
 }

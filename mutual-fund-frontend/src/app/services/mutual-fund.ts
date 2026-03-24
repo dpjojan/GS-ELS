@@ -16,8 +16,8 @@ export class MutualFundService {
     return this.http.get<MutualFundInfo[]>(`${this.baseUrl}/funds`);
   }
 
-  getFutureValue(ticker: string, principal: number, years: number): Observable<number> {
-    return this.http.get<number>(`${this.baseUrl}/futureVal`, {
+  getFutureValueAllYears(ticker: string, principal: number, years: number): Observable<number[]> {
+    return this.http.get<number[]>(`${this.baseUrl}/futureValAll`, {
       params: { ticker, principal, years }
     });
   }
