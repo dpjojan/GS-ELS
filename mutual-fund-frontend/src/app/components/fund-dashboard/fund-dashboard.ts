@@ -108,7 +108,7 @@ interface YearRow {
             <div class="summary-row">
               <div class="summary-box">
                 <div class="summary-label">You invest</div>
-                <div class="summary-value">{{ formatMoney(principal) }}</div>
+                <div class="summary-value">{{ formatMoney(calculatedPrincipal) }}</div>
               </div>
               <div class="summary-box">
                 <div class="summary-label">Estimated profit after {{ years }} year{{ years > 1 ? 's' : '' }}</div>
@@ -136,7 +136,7 @@ interface YearRow {
                   <div class="bar-track">
                     <div
                       class="bar-invested"
-                      [style.height.%]="(principal / maxValue) * 100"
+                      [style.height.%]="(calculatedPrincipal / maxValue) * 100"
                     ></div>
                     <div
                       class="bar-profit"
@@ -169,7 +169,7 @@ interface YearRow {
                   @for (row of yearRows; track row.year) {
                     <tr [class.last-row]="row.year === years">
                       <td>{{ row.year }}</td>
-                      <td>{{ formatMoney(principal) }}</td>
+                      <td>{{ formatMoney(calculatedPrincipal) }}</td>
                       <td class="green">{{ formatMoney(row.futureValue) }}</td>
                       <td class="green">+{{ formatMoney(row.profit) }}</td>
                       <td class="green">+{{ row.profitPercent.toFixed(1) }}%</td>
@@ -321,6 +321,7 @@ export class FundDashboard implements OnInit {
   showResults = false;
 
   // Results
+  calculatedPrincipal = 0;
   finalValue = 0;
   finalProfit = 0;
   totalGrowthPct = 0;
@@ -378,6 +379,7 @@ export class FundDashboard implements OnInit {
 
     this.loading = true;
     this.showResults = false;
+    this.calculatedPrincipal = this.principal;
 
     // The backend only returns the final future value for the full duration.
     // We call it once per year (year 1 through N) to build the chart.
@@ -386,13 +388,13 @@ export class FundDashboard implements OnInit {
         this.yearRows = values.map((fv, i) => ({
           year: i + 1,
           futureValue: fv,
-          profit: fv - this.principal,
-          profitPercent: ((fv - this.principal) / this.principal) * 100,
+          profit: fv - this.calculatedPrincipal,
+          profitPercent: ((fv - this.calculatedPrincipal) / this.calculatedPrincipal) * 100,
         }));
 
         this.finalValue = this.yearRows[this.yearRows.length - 1].futureValue;
-        this.finalProfit = this.finalValue - this.principal;
-        this.totalGrowthPct = (this.finalProfit / this.principal) * 100;
+        this.finalProfit = this.finalValue - this.calculatedPrincipal;
+        this.totalGrowthPct = (this.finalProfit / this.calculatedPrincipal) * 100;
         this.maxValue = Math.max(...this.yearRows.map(r => r.futureValue));
 
         this.loading = false;
