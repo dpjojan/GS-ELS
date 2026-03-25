@@ -302,7 +302,7 @@ export class FundDashboard implements OnInit {
   loadingFunds = true;
 
   // Grouped by risk (by ticker)
-  lowRiskTickers  = ['VBTLX', 'SWAGX', 'FZILX', 'PRDGX'];
+  lowRiskTickers  = ['FZILX', 'PRDGX'];
   medRiskTickers  = ['VFIAX', 'FXAIX'];
   highRiskTickers = ['VSMAX', 'SWLGX'];
   get lowRiskFunds()  { return this.allFunds.filter(f => this.lowRiskTickers.includes(f.ticker)); }
@@ -358,8 +358,6 @@ export class FundDashboard implements OnInit {
       error: () => {
         // Fallback if backend not running
         this.allFunds = [
-          { ticker: 'VBTLX', name: 'Vanguard Total Bond Market Index Fund' },
-          { ticker: 'SWAGX', name: 'Schwab US Aggregate Bond Index Fund' },
           { ticker: 'FZILX', name: 'Fidelity ZERO International Index Fund' },
           { ticker: 'PRDGX', name: 'T.Rowe Price Dividend Growth Fund' },
           { ticker: 'VFIAX', name: 'Vanguard 500 Index Fund' },

@@ -41,12 +41,12 @@ public class MutualFundController {
     public ArrayList<MutualFund> getFunds() {
         log.info("GET /funds requested");
         ArrayList<MutualFund> fundsList = new ArrayList<>();
-        fundsList.add(new MutualFund("VBTLX", "Vanguard Total Bond Market Index Fund"));
-        fundsList.add(new MutualFund("SWAGX", "Schwab US Aggregate Bond Index Fund"));
         fundsList.add(new MutualFund("VFIAX", "Vanguard 500 Index Fund"));
         fundsList.add(new MutualFund("FXAIX", "Fidelity 500 Index Fund"));
         fundsList.add(new MutualFund("VSMAX", "Vanguard Small Cap Index Fund"));
         fundsList.add(new MutualFund("SWLGX", "Schwab Large Cap Growth Fund"));
+        fundsList.add(new MutualFund("PRDGX", "T.Rowe Price Dividend Growth Fund"));
+        fundsList.add(new MutualFund("FZILX", "Fidelity ZERO International Index Fund"));
         return fundsList;
     }
     
