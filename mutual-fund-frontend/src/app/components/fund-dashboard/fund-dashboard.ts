@@ -30,30 +30,52 @@ interface YearRow {
 
           <!Fund Selector>
           <div class="field">
-            <label for="fund">Select a Fund</label>
-            <select id="fund" [(ngModel)]="selectedTicker" [disabled]="loadingFunds">
-              <option value="">
-                {{ loadingFunds ? 'Loading funds...' : '-- Choose a fund --' }}
-              </option>
-
-              <optgroup label="Low Risk (Bond Funds)">
-                @for (f of lowRiskFunds; track f.ticker) {
-                  <option [value]="f.ticker">{{ f.ticker }} — {{ f.name }}</option>
-                }
-              </optgroup>
-
-              <optgroup label="Medium Risk (S&P 500 Index Funds)">
-                @for (f of medRiskFunds; track f.ticker) {
-                  <option [value]="f.ticker">{{ f.ticker }} — {{ f.name }}</option>
-                }
-              </optgroup>
-
-              <optgroup label="High Risk (Growth / Small Cap)">
-                @for (f of highRiskFunds; track f.ticker) {
-                  <option [value]="f.ticker">{{ f.ticker }} — {{ f.name }}</option>
-                }
-              </optgroup>
-            </select>
+            <label>Select a Fund</label>
+            <div class="fund-selector" [class.open]="dropdownOpen">
+              <div class="fund-trigger" (click)="toggleDropdown()">
+                <span [class.placeholder]="!selectedTicker">{{ selectedFundLabel }}</span>
+                <span class="chevron">▾</span>
+              </div>
+              @if (dropdownOpen) {
+                <div class="dropdown-backdrop" (click)="dropdownOpen = false; searchQuery = ''"></div>
+                <div class="fund-dropdown">
+                  <div class="fund-search-wrap">
+                    <input
+                      class="fund-search"
+                      [(ngModel)]="searchQuery"
+                      placeholder="Search by name or ticker..."
+                      (click)="$event.stopPropagation()"
+                    />
+                  </div>
+                  @if (!searchQuery.trim()) {
+                    <div class="dropdown-group-label">Favorites</div>
+                    @for (group of favoriteGroups; track group.label) {
+                      @if (group.funds.length) {
+                        <div class="dropdown-risk-label">{{ group.label }}</div>
+                        @for (f of group.funds; track f.ticker) {
+                          <div class="dropdown-item" [class.selected]="f.ticker === selectedTicker" (click)="selectFund(f.ticker)">
+                            <span class="item-ticker">{{ f.ticker }}</span>
+                            <span class="item-name">{{ f.name }}</span>
+                          </div>
+                        }
+                      }
+                    }
+                  } @else {
+                    @if (searchResults.length) {
+                      <div class="dropdown-group-label">Search Results</div>
+                      @for (f of searchResults; track f.ticker) {
+                        <div class="dropdown-item" [class.selected]="f.ticker === selectedTicker" (click)="selectFund(f.ticker)">
+                          <span class="item-ticker">{{ f.ticker }}</span>
+                          <span class="item-name">{{ f.name }}</span>
+                        </div>
+                      }
+                    } @else {
+                      <div class="dropdown-empty">No funds found</div>
+                    }
+                  }
+                </div>
+              }
+            </div>
             @if (selectedTicker) {
               <div class="risk-note" [ngClass]="riskClass">
                 {{ riskLabel }} · {{ riskDescription }}
@@ -93,7 +115,7 @@ interface YearRow {
           <button
             class="calc-btn"
             (click)="calculate()"
-            [disabled]="loading || !!errorMessage"
+            [disabled]="loading"
           >
             {{ loading ? 'Calculating...' : 'Calculate Future Value' }}
           </button>
@@ -131,7 +153,7 @@ interface YearRow {
               @for (row of yearRows; track row.year) {
                 <div class="bar-group">
                   <div class="bar-labels">
-                    <span class="bar-val-label">{{ formatMoneyShort(row.futureValue) }}</span>
+                    <span class="bar-val-label">{{ (years <= 10 || row.year % 5 === 0) ? formatMoneyShort(row.futureValue) : '' }}</span>
                   </div>
                   <div class="bar-track">
                     <div
@@ -241,6 +263,41 @@ interface YearRow {
     .calc-btn:hover { background: #244f96; }
     .calc-btn:disabled { opacity: .6; cursor: not-allowed; }
 
+    /* Fund Selector */
+    .fund-selector { position: relative; }
+    .fund-trigger {
+      width: 100%; padding: 10px 12px;
+      border: 1px solid #ccc; border-radius: 6px;
+      font-size: 14px; background: white;
+      cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+      user-select: none;
+    }
+    .fund-selector.open .fund-trigger { border-color: #1a3a6c; box-shadow: 0 0 0 3px rgba(26,58,108,.1); }
+    .fund-trigger .placeholder { color: #999; }
+    .chevron { color: #666; font-size: 12px; }
+    .dropdown-backdrop { position: fixed; inset: 0; z-index: 10; }
+    .fund-dropdown {
+      position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+      background: white; border: 1px solid #ccc; border-radius: 6px;
+      box-shadow: 0 4px 16px rgba(0,0,0,.12); z-index: 11;
+      max-height: 300px; overflow-y: auto;
+    }
+    .fund-search-wrap { padding: 8px; border-bottom: 1px solid #eee; }
+    .fund-search {
+      width: 100%; padding: 8px 10px;
+      border: 1px solid #ddd; border-radius: 5px;
+      font-size: 13px; box-sizing: border-box;
+    }
+    .fund-search:focus { outline: none; border-color: #1a3a6c; }
+    .dropdown-group-label { padding: 8px 12px 4px; font-size: 10px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: .05em; }
+    .dropdown-risk-label { padding: 4px 12px; font-size: 11px; color: #888; font-style: italic; }
+    .dropdown-item { padding: 9px 12px; cursor: pointer; display: flex; gap: 8px; align-items: baseline; }
+    .dropdown-item:hover { background: #f0f4f8; }
+    .dropdown-item.selected { background: #e8f0fb; }
+    .item-ticker { font-size: 13px; font-weight: 700; color: #1a3a6c; min-width: 52px; }
+    .item-name { font-size: 12px; color: #555; }
+    .dropdown-empty { padding: 16px 12px; font-size: 13px; color: #999; text-align: center; }
+
     /* Results */
     .results-card { }
 
@@ -315,6 +372,10 @@ export class FundDashboard implements OnInit {
   years = 5;
   yearOptions = [1, 2, 3, 5, 7, 10, 15, 20];
 
+  // Dropdown state
+  searchQuery = '';
+  dropdownOpen = false;
+
   // State
   loading = false;
   errorMessage = '';
@@ -329,6 +390,39 @@ export class FundDashboard implements OnInit {
   maxValue = 1;
 
   // Risk info for selected fund
+  get selectedFundLabel(): string {
+    if (!this.selectedTicker) return 'Choose a fund';
+    const fund = this.allFunds.find(f => f.ticker === this.selectedTicker);
+    return fund ? `${fund.ticker} — ${fund.name}` : this.selectedTicker;
+  }
+
+  get favoriteGroups() {
+    return [
+      { label: 'Low Risk (Bond Funds)',         funds: this.lowRiskFunds },
+      { label: 'Medium Risk (S&P 500)',          funds: this.medRiskFunds },
+      { label: 'High Risk (Growth / Small Cap)', funds: this.highRiskFunds },
+    ];
+  }
+
+  get searchResults() {
+    const q = this.searchQuery.trim().toLowerCase();
+    if (!q) return [];
+    return this.allFunds.filter(f =>
+      f.ticker.toLowerCase().includes(q) || f.name.toLowerCase().includes(q)
+    );
+  }
+
+  toggleDropdown() {
+    this.dropdownOpen = !this.dropdownOpen;
+    if (!this.dropdownOpen) this.searchQuery = '';
+  }
+
+  selectFund(ticker: string) {
+    this.selectedTicker = ticker;
+    this.dropdownOpen = false;
+    this.searchQuery = '';
+  }
+
   get riskLabel(): string {
     if (this.lowRiskTickers.includes(this.selectedTicker))  return 'Low Risk';
     if (this.medRiskTickers.includes(this.selectedTicker))  return 'Medium Risk';
@@ -383,6 +477,7 @@ get filteredFunds(): MutualFundInfo[] {
 
     if (!this.selectedTicker) { this.errorMessage = 'Please select a fund.'; return; }
     if (!this.principal || this.principal <= 0) { this.errorMessage = 'Please enter a valid investment amount.'; return; }
+    if (this.principal > 1_000_000_000) { this.errorMessage = 'Investment amount cannot exceed $1,000,000,000.'; return; }
 
     this.loading = true;
     this.showResults = false;
@@ -422,8 +517,9 @@ get filteredFunds(): MutualFundInfo[] {
   }
 
   formatMoneyShort(n: number): string {
-    if (n >= 1_000_000) return '$' + (n / 1_000_000).toFixed(1) + 'M';
-    if (n >= 1_000)     return '$' + (n / 1_000).toFixed(1) + 'K';
+    if (n >= 1_000_000_000) return '$' + (n / 1_000_000_000).toFixed(1) + 'B';
+    if (n >= 1_000_000)     return '$' + (n / 1_000_000).toFixed(1) + 'M';
+    if (n >= 1_000)         return '$' + (n / 1_000).toFixed(1) + 'K';
     return '$' + Math.round(n);
   }
 }
