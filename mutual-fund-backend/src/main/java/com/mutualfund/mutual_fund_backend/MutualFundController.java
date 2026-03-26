@@ -41,12 +41,60 @@ public class MutualFundController {
     public ArrayList<MutualFund> getFunds() {
         log.info("GET /funds requested");
         ArrayList<MutualFund> fundsList = new ArrayList<>();
-        fundsList.add(new MutualFund("VFIAX", "Vanguard 500 Index Fund"));
+        // US Equity
+        fundsList.add(new MutualFund("TRBCX", "T. Rowe Price Blue Chip Growth"));
+        fundsList.add(new MutualFund("AGTHX", "American Funds Growth Fund of America"));
+        fundsList.add(new MutualFund("DODGX", "Dodge & Cox Stock Fund"));
+        fundsList.add(new MutualFund("FCNTX", "Fidelity Contrafund"));
+        fundsList.add(new MutualFund("FDGRX", "Fidelity Growth Company Fund"));
+        fundsList.add(new MutualFund("PRGFX", "T. Rowe Price Growth Stock Fund"));
+        fundsList.add(new MutualFund("VDIGX", "Vanguard Dividend Growth Fund"));
+        fundsList.add(new MutualFund("AWSHX", "American Funds Washington Mutual"));
+        fundsList.add(new MutualFund("PRBLX", "Parnassus Core Equity Fund"));
+        fundsList.add(new MutualFund("JENSX", "Jensen Quality Growth Fund"));
+        fundsList.add(new MutualFund("GABAX", "Gabelli Asset Fund"));
+        fundsList.add(new MutualFund("CSIEX", "Calvert Equity Fund"));
+
+        // Index
+        fundsList.add(new MutualFund("VFIAX", "Vanguard 500 Index Fund Admiral"));
         fundsList.add(new MutualFund("FXAIX", "Fidelity 500 Index Fund"));
-        fundsList.add(new MutualFund("VSMAX", "Vanguard Small Cap Index Fund"));
-        fundsList.add(new MutualFund("SWLGX", "Schwab Large Cap Growth Fund"));
-        fundsList.add(new MutualFund("PRDGX", "T.Rowe Price Dividend Growth Fund"));
-        fundsList.add(new MutualFund("FZILX", "Fidelity ZERO International Index Fund"));
+        fundsList.add(new MutualFund("SWPPX", "Schwab S&P 500 Index Fund"));
+        fundsList.add(new MutualFund("VIGAX", "Vanguard Growth Index Admiral"));
+        fundsList.add(new MutualFund("VTSAX", "Vanguard Total Stock Market Index Admiral"));
+        fundsList.add(new MutualFund("FSKAX", "Fidelity Total Market Index Fund"));
+        fundsList.add(new MutualFund("SWTSX", "Schwab Total Stock Market Index"));
+
+        // Small/Mid Cap
+        fundsList.add(new MutualFund("VIMAX", "Vanguard Mid-Cap Index Admiral"));
+        fundsList.add(new MutualFund("FMCSX", "Fidelity Mid-Cap Stock Fund"));
+        fundsList.add(new MutualFund("RPMGX", "T. Rowe Price Mid-Cap Growth Fund"));
+        fundsList.add(new MutualFund("VSMAX", "Vanguard Small-Cap Index Admiral"));
+        fundsList.add(new MutualFund("RYTRX", "Royce Total Return Fund"));
+        fundsList.add(new MutualFund("BIASX", "Brown Advisory Small-Cap Growth"));
+
+        // International
+        fundsList.add(new MutualFund("VTIAX", "Vanguard Total International Stock Index"));
+        fundsList.add(new MutualFund("AEPGX", "American Funds EuroPacific Growth"));
+        fundsList.add(new MutualFund("FIGFX", "Fidelity International Growth Fund"));
+        fundsList.add(new MutualFund("PRITX", "T. Rowe Price International Stock Fund"));
+        fundsList.add(new MutualFund("OAKIX", "Oakmark International Fund"));
+        fundsList.add(new MutualFund("DODFX", "Dodge & Cox International Stock Fund"));
+        fundsList.add(new MutualFund("VTMGX", "Vanguard Developed Markets Index Admiral"));
+        fundsList.add(new MutualFund("MAPIX", "Matthews Asia Dividend Fund"));
+        fundsList.add(new MutualFund("BEXFX", "Baron Emerging Markets Fund"));
+        fundsList.add(new MutualFund("FEMKX", "Fidelity Emerging Markets Fund"));
+
+        // Sector
+        fundsList.add(new MutualFund("VGHAX", "Vanguard Health Care Fund Admiral"));
+        fundsList.add(new MutualFund("FSPTX", "Fidelity Select Technology Portfolio"));
+        fundsList.add(new MutualFund("FSPHX", "Fidelity Select Health Care Portfolio"));
+        fundsList.add(new MutualFund("PRHSX", "T. Rowe Price Health Sciences Fund"));
+        fundsList.add(new MutualFund("FSUTX", "Fidelity Select Utilities Portfolio"));
+        fundsList.add(new MutualFund("VGELX", "Vanguard Energy Fund Admiral"));
+        fundsList.add(new MutualFund("FIDSX", "Fidelity Select Financial Services"));
+        fundsList.add(new MutualFund("BREIX", "Baron Real Estate Fund"));
+        fundsList.add(new MutualFund("VGSLX", "Vanguard Real Estate Index Admiral"));
+        fundsList.add(new MutualFund("AREEX", "American Century Real Estate Fund"));
         return fundsList;
     }
     
