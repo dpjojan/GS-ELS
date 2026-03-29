@@ -442,13 +442,6 @@ export class FundDashboard implements OnInit {
     return '';
   }
 
-  searchQuery = '';
-  favorites: string[] = JSON.parse(localStorage.getItem('favorites') || '[]');
-  // search feature for mutual funds and favoriting
-get filteredFunds(): MutualFundInfo[] {
-  const query = this.searchQuery.toLowerCase();
-  return this.allFunds.filter(f => f.name.toLowerCase().includes(query) || f.ticker.toLowerCase().includes(query));
-
   ngOnInit() {
     this.service.getFunds().subscribe({
       next: (funds) => {

@@ -1,4 +1,4 @@
-import { Component, inject, ElementRef, ViewChild, AfterViewChecked } from '@angular/core';
+import { Component, inject, ElementRef, ViewChild, AfterViewChecked, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ChatService } from '../../services/chat';
@@ -169,6 +169,7 @@ interface Message {
 })
 export class ChatbotComponent implements AfterViewChecked {
   private chatService = inject(ChatService);
+  private cdr = inject(ChangeDetectorRef);
 
   @ViewChild('scrollContainer') private scrollContainer!: ElementRef;
 
@@ -193,10 +194,12 @@ export class ChatbotComponent implements AfterViewChecked {
       next: (response) => {
         this.messages.push({ role: 'bot', text: response });
         this.loading = false;
+        this.cdr.detectChanges();
       },
       error: () => {
         this.messages.push({ role: 'bot', text: 'Sorry, something went wrong. Please try again.' });
         this.loading = false;
+        this.cdr.detectChanges();
       }
     });
   }
