@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 export interface MutualFundInfo {
   ticker: string;
   name: string;
+  risk: string;
 }
 
 @Injectable({ providedIn: 'root' })

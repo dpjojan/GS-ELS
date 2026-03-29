@@ -358,13 +358,10 @@ export class FundDashboard implements OnInit {
   allFunds: MutualFundInfo[] = [];
   loadingFunds = true;
 
-  // Grouped by risk (by ticker)
-  lowRiskTickers  = ['FZILX', 'PRDGX'];
-  medRiskTickers  = ['VFIAX', 'FXAIX'];
-  highRiskTickers = ['VSMAX', 'SWLGX'];
-  get lowRiskFunds()  { return this.allFunds.filter(f => this.lowRiskTickers.includes(f.ticker)); }
-  get medRiskFunds()  { return this.allFunds.filter(f => this.medRiskTickers.includes(f.ticker)); }
-  get highRiskFunds() { return this.allFunds.filter(f => this.highRiskTickers.includes(f.ticker)); }
+  // Grouped by risk (using risk attribute from backend)
+  get lowRiskFunds()  { return this.allFunds.filter(f => f.risk === 'Low'); }
+  get medRiskFunds()  { return this.allFunds.filter(f => f.risk === 'Medium'); }
+  get highRiskFunds() { return this.allFunds.filter(f => f.risk === 'High'); }
 
   // Form inputs
   selectedTicker = '';
@@ -374,6 +371,7 @@ export class FundDashboard implements OnInit {
 
   // Dropdown state
   searchQuery = '';
+  favorites: string[] = JSON.parse(localStorage.getItem('favorites') || '["FZILX","PRDGX","VFIAX","FXAIX","VSMAX","SWLGX"]');
   dropdownOpen = false;
 
   // State
@@ -397,10 +395,11 @@ export class FundDashboard implements OnInit {
   }
 
   get favoriteGroups() {
+    const favFunds = this.allFunds.filter(f => this.favorites.includes(f.ticker));
     return [
-      { label: 'Low Risk (Bond Funds)',         funds: this.lowRiskFunds },
-      { label: 'Medium Risk (S&P 500)',          funds: this.medRiskFunds },
-      { label: 'High Risk (Growth / Small Cap)', funds: this.highRiskFunds },
+      { label: 'Low Risk (Bond Funds)',         funds: favFunds.filter(f => f.risk === 'Low') },
+      { label: 'Medium Risk (S&P 500)',          funds: favFunds.filter(f => f.risk === 'Medium') },
+      { label: 'High Risk (Growth / Small Cap)', funds: favFunds.filter(f => f.risk === 'High') },
     ];
   }
 
@@ -423,22 +422,28 @@ export class FundDashboard implements OnInit {
     this.searchQuery = '';
   }
 
+  get selectedFund(): MutualFundInfo | undefined {
+    return this.allFunds.find(f => f.ticker === this.selectedTicker);
+  }
   get riskLabel(): string {
-    if (this.lowRiskTickers.includes(this.selectedTicker))  return 'Low Risk';
-    if (this.medRiskTickers.includes(this.selectedTicker))  return 'Medium Risk';
-    if (this.highRiskTickers.includes(this.selectedTicker)) return 'High Risk';
+    const risk = this.selectedFund?.risk;
+    if (risk === 'Low')    return 'Low Risk';
+    if (risk === 'Medium') return 'Medium Risk';
+    if (risk === 'High')   return 'High Risk';
     return '';
   }
   get riskClass(): string {
-    if (this.lowRiskTickers.includes(this.selectedTicker))  return 'risk-note risk-low';
-    if (this.medRiskTickers.includes(this.selectedTicker))  return 'risk-note risk-med';
-    if (this.highRiskTickers.includes(this.selectedTicker)) return 'risk-note risk-high';
+    const risk = this.selectedFund?.risk;
+    if (risk === 'Low')    return 'risk-note risk-low';
+    if (risk === 'Medium') return 'risk-note risk-med';
+    if (risk === 'High')   return 'risk-note risk-high';
     return 'risk-note';
   }
   get riskDescription(): string {
-    if (this.lowRiskTickers.includes(this.selectedTicker))  return 'Bond fund. Steady, modest returns. Lower chance of loss.';
-    if (this.medRiskTickers.includes(this.selectedTicker))  return 'S&P 500 index fund. Historically strong long-term returns.';
-    if (this.highRiskTickers.includes(this.selectedTicker)) return 'Growth/small cap fund. Higher potential returns, more volatile.';
+    const risk = this.selectedFund?.risk;
+    if (risk === 'Low')    return 'Steady, modest returns. Lower chance of loss.';
+    if (risk === 'Medium') return 'Historically strong long-term returns.';
+    if (risk === 'High')   return 'Higher potential returns, more volatile.';
     return '';
   }
 
@@ -457,12 +462,12 @@ export class FundDashboard implements OnInit {
       error: () => {
         // Fallback if backend not running
         this.allFunds = [
-          { ticker: 'FZILX', name: 'Fidelity ZERO International Index Fund' },
-          { ticker: 'PRDGX', name: 'T.Rowe Price Dividend Growth Fund' },
-          { ticker: 'VFIAX', name: 'Vanguard 500 Index Fund' },
-          { ticker: 'FXAIX', name: 'Fidelity 500 Index Fund' },
-          { ticker: 'VSMAX', name: 'Vanguard Small Cap Index Fund' },
-          { ticker: 'SWLGX', name: 'Schwab Large Cap Growth Fund' },
+          { ticker: 'FZILX', name: 'Fidelity ZERO International Index Fund', risk: 'Low' },
+          { ticker: 'PRDGX', name: 'T.Rowe Price Dividend Growth Fund', risk: 'Low' },
+          { ticker: 'VFIAX', name: 'Vanguard 500 Index Fund', risk: 'Medium' },
+          { ticker: 'FXAIX', name: 'Fidelity 500 Index Fund', risk: 'Medium' },
+          { ticker: 'VSMAX', name: 'Vanguard Small Cap Index Fund', risk: 'High' },
+          { ticker: 'SWLGX', name: 'Schwab Large Cap Growth Fund', risk: 'High' },
         ];
         this.loadingFunds = false;
         this.cdr.detectChanges();
