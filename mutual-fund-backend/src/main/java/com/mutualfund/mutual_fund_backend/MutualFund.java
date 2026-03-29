@@ -6,10 +6,12 @@ package com.mutualfund.mutual_fund_backend;
 public class MutualFund {
     private String ticker; //the unique identifiable feature for each mutual fund (needed for Newton API)
     private String name;
+    private String risk;
 
-    public MutualFund(String ticker, String name) {
+    public MutualFund(String ticker, String name, String risk) {
         this.ticker = ticker;
         this.name = name;
+        this.risk = risk;
     }
 
     public String getTicker() {
@@ -20,5 +22,7 @@ public class MutualFund {
         return name;
     }
 
-
+    public String getRisk() {
+        return risk;
+    }
 }
