@@ -60,6 +60,13 @@ interface YearRow {
                         }
                       }
                     }
+                    <div class="dropdown-group-label">Other Funds</div>
+                    @for (f of otherFunds; track f.ticker) {
+                      <div class="dropdown-item" [class.selected]="f.ticker === selectedTicker" (click)="selectFund(f.ticker)">
+                        <span class="item-ticker">{{ f.ticker }}</span>
+                        <span class="item-name">{{ f.name }}</span>
+                      </div>
+                    }
                   } @else {
                     @if (searchResults.length) {
                       <div class="dropdown-group-label">Search Results</div>
@@ -267,6 +274,7 @@ interface YearRow {
     .fund-selector { position: relative; }
     .fund-trigger {
       width: 100%; padding: 10px 12px;
+      box-sizing: border-box; margin: 0;
       border: 1px solid #ccc; border-radius: 6px;
       font-size: 14px; background: white;
       cursor: pointer; display: flex; justify-content: space-between; align-items: center;
@@ -373,6 +381,11 @@ export class FundDashboard implements OnInit {
   searchQuery = '';
   favorites: string[] = JSON.parse(localStorage.getItem('favorites') || '["FZILX","PRDGX","VFIAX","FXAIX","VSMAX","SWLGX"]');
   dropdownOpen = false;
+
+  // Funds that are not in favorites for the dropdown after favorites are displayed
+  get otherFunds() {
+    return this.allFunds.filter(f => !this.favorites.includes(f.ticker));
+  }
 
   // State
   loading = false;
