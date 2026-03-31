@@ -132,7 +132,7 @@ public class MutualFundController {
     public String chat(@RequestBody Map<String, String> body) {
         String message = body.get("message");
         log.info("POST /chat - message=\"{}\"", message);
-        return geminiService.testGemini(message);
+        return geminiService.chat(message);
     }
 
 
