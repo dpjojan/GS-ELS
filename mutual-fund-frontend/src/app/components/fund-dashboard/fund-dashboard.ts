@@ -54,24 +54,20 @@ interface YearRow {
                         <div class="dropdown-risk-label">{{ group.label }}</div>
                         @for (f of group.funds; track f.ticker) {
                           <div class="dropdown-item" [class.selected]="f.ticker === selectedTicker" (click)="selectFund(f.ticker)">
+                            <span class="star" (click)="$event.stopPropagation(); toggleFavorite(f.ticker)">{{ favorites.includes(f.ticker) ? '★' : '☆' }}</span>
                             <span class="item-ticker">{{ f.ticker }}</span>
                             <span class="item-name">{{ f.name }}</span>
                           </div>
                         }
                       }
                     }
-                    <div class="dropdown-group-label">Other Funds</div>
-                    @for (f of otherFunds; track f.ticker) {
-                      <div class="dropdown-item" [class.selected]="f.ticker === selectedTicker" (click)="selectFund(f.ticker)">
-                        <span class="item-ticker">{{ f.ticker }}</span>
-                        <span class="item-name">{{ f.name }}</span>
-                      </div>
-                    }
+                    <div class="dropdown-empty" style="font-size:11px;color:#aaa;padding:8px 12px;">Search to find more funds</div>
                   } @else {
                     @if (searchResults.length) {
                       <div class="dropdown-group-label">Search Results</div>
                       @for (f of searchResults; track f.ticker) {
                         <div class="dropdown-item" [class.selected]="f.ticker === selectedTicker" (click)="selectFund(f.ticker)">
+                          <span class="star" (click)="$event.stopPropagation(); toggleFavorite(f.ticker)">{{ favorites.includes(f.ticker) ? '★' : '☆' }}</span>
                           <span class="item-ticker">{{ f.ticker }}</span>
                           <span class="item-name">{{ f.name }}</span>
                         </div>
@@ -304,6 +300,7 @@ interface YearRow {
     .dropdown-item.selected { background: #e8f0fb; }
     .item-ticker { font-size: 13px; font-weight: 700; color: #1a3a6c; min-width: 52px; }
     .item-name { font-size: 12px; color: #555; }
+    .star { font-size: 14px; color: #f5a623; cursor: pointer; min-width: 18px; }
     .dropdown-empty { padding: 16px 12px; font-size: 13px; color: #999; text-align: center; }
 
     /* Results */
@@ -427,6 +424,16 @@ export class FundDashboard implements OnInit {
   toggleDropdown() {
     this.dropdownOpen = !this.dropdownOpen;
     if (!this.dropdownOpen) this.searchQuery = '';
+  }
+
+  toggleFavorite(ticker: string) {
+    const idx = this.favorites.indexOf(ticker);
+    if (idx === -1) {
+      this.favorites.push(ticker);
+    } else {
+      this.favorites.splice(idx, 1);
+    }
+    localStorage.setItem('favorites', JSON.stringify(this.favorites));
   }
 
   selectFund(ticker: string) {
