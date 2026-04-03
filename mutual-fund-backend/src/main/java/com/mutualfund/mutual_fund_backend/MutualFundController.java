@@ -1,6 +1,6 @@
 package com.mutualfund.mutual_fund_backend;
 
-import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
@@ -36,75 +36,14 @@ public class MutualFundController {
     @Autowired
     private GeminiService geminiService;
 
-    // when frontend requests mutual funds, return this list of hardcoded funds
+    @Autowired
+    private MutualFundRepository mutualFundRepository;
+
+    // fetch funds from the database
     @GetMapping("/funds")
-    public ArrayList<MutualFund> getFunds() {
+    public List<MutualFund> getFunds() {
         log.info("GET /funds requested");
-        ArrayList<MutualFund> fundsList = new ArrayList<>();
-        // Low Risk
-        fundsList.add(new MutualFund("FZILX", "Fidelity ZERO International Index Fund", "Low"));
-        fundsList.add(new MutualFund("PRDGX", "T. Rowe Price Dividend Growth Fund", "Low"));
-
-        // Medium Risk
-        fundsList.add(new MutualFund("VFIAX", "Vanguard 500 Index Fund Admiral", "Medium"));
-        fundsList.add(new MutualFund("FXAIX", "Fidelity 500 Index Fund", "Medium"));
-
-        // High Risk
-        fundsList.add(new MutualFund("VSMAX", "Vanguard Small-Cap Index Admiral", "High"));
-        fundsList.add(new MutualFund("SWLGX", "Schwab Large Cap Growth Fund", "High"));
-
-        // US Equity
-        fundsList.add(new MutualFund("TRBCX", "T. Rowe Price Blue Chip Growth", "High"));
-        fundsList.add(new MutualFund("AGTHX", "American Funds Growth Fund of America", "High"));
-        fundsList.add(new MutualFund("DODGX", "Dodge & Cox Stock Fund", "Medium"));
-        fundsList.add(new MutualFund("FCNTX", "Fidelity Contrafund", "High"));
-        fundsList.add(new MutualFund("FDGRX", "Fidelity Growth Company Fund", "High"));
-        fundsList.add(new MutualFund("PRGFX", "T. Rowe Price Growth Stock Fund", "High"));
-        fundsList.add(new MutualFund("VDIGX", "Vanguard Dividend Growth Fund", "Medium"));
-        fundsList.add(new MutualFund("AWSHX", "American Funds Washington Mutual", "Medium"));
-        fundsList.add(new MutualFund("PRBLX", "Parnassus Core Equity Fund", "Medium"));
-        fundsList.add(new MutualFund("JENSX", "Jensen Quality Growth Fund", "Medium"));
-        fundsList.add(new MutualFund("GABAX", "Gabelli Asset Fund", "Medium"));
-        fundsList.add(new MutualFund("CSIEX", "Calvert Equity Fund", "Medium"));
-
-        // Index
-        fundsList.add(new MutualFund("SWPPX", "Schwab S&P 500 Index Fund", "Medium"));
-        fundsList.add(new MutualFund("VIGAX", "Vanguard Growth Index Admiral", "High"));
-        fundsList.add(new MutualFund("VTSAX", "Vanguard Total Stock Market Index Admiral", "Medium"));
-        fundsList.add(new MutualFund("FSKAX", "Fidelity Total Market Index Fund", "Medium"));
-        fundsList.add(new MutualFund("SWTSX", "Schwab Total Stock Market Index", "Medium"));
-
-        // Small/Mid Cap
-        fundsList.add(new MutualFund("VIMAX", "Vanguard Mid-Cap Index Admiral", "Medium"));
-        fundsList.add(new MutualFund("FMCSX", "Fidelity Mid-Cap Stock Fund", "High"));
-        fundsList.add(new MutualFund("RPMGX", "T. Rowe Price Mid-Cap Growth Fund", "High"));
-        fundsList.add(new MutualFund("RYTRX", "Royce Total Return Fund", "High"));
-        fundsList.add(new MutualFund("BIASX", "Brown Advisory Small-Cap Growth", "High"));
-
-        // International
-        fundsList.add(new MutualFund("VTIAX", "Vanguard Total International Stock Index", "Medium"));
-        fundsList.add(new MutualFund("AEPGX", "American Funds EuroPacific Growth", "High"));
-        fundsList.add(new MutualFund("FIGFX", "Fidelity International Growth Fund", "High"));
-        fundsList.add(new MutualFund("PRITX", "T. Rowe Price International Stock Fund", "High"));
-        fundsList.add(new MutualFund("OAKIX", "Oakmark International Fund", "High"));
-        fundsList.add(new MutualFund("DODFX", "Dodge & Cox International Stock Fund", "Medium"));
-        fundsList.add(new MutualFund("VTMGX", "Vanguard Developed Markets Index Admiral", "Medium"));
-        fundsList.add(new MutualFund("MAPIX", "Matthews Asia Dividend Fund", "High"));
-        fundsList.add(new MutualFund("BEXFX", "Baron Emerging Markets Fund", "High"));
-        fundsList.add(new MutualFund("FEMKX", "Fidelity Emerging Markets Fund", "High"));
-
-        // Sector
-        fundsList.add(new MutualFund("VGHAX", "Vanguard Health Care Fund Admiral", "Medium"));
-        fundsList.add(new MutualFund("FSPTX", "Fidelity Select Technology Portfolio", "High"));
-        fundsList.add(new MutualFund("FSPHX", "Fidelity Select Health Care Portfolio", "High"));
-        fundsList.add(new MutualFund("PRHSX", "T. Rowe Price Health Sciences Fund", "High"));
-        fundsList.add(new MutualFund("FSUTX", "Fidelity Select Utilities Portfolio", "Low"));
-        fundsList.add(new MutualFund("VGELX", "Vanguard Energy Fund Admiral", "High"));
-        fundsList.add(new MutualFund("FIDSX", "Fidelity Select Financial Services", "High"));
-        fundsList.add(new MutualFund("BREIX", "Baron Real Estate Fund", "High"));
-        fundsList.add(new MutualFund("VGSLX", "Vanguard Real Estate Index Admiral", "Medium"));
-        fundsList.add(new MutualFund("AREEX", "American Century Real Estate Fund", "Medium"));
-        return fundsList;
+        return mutualFundRepository.findAll();
     }
     
     @GetMapping("/futureValAll")
