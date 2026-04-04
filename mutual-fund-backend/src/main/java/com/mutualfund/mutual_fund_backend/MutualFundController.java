@@ -104,6 +104,35 @@ public class MutualFundController {
         fundsList.add(new MutualFund("BREIX", "Baron Real Estate Fund", "High"));
         fundsList.add(new MutualFund("VGSLX", "Vanguard Real Estate Index Admiral", "Medium"));
         fundsList.add(new MutualFund("AREEX", "American Century Real Estate Fund", "Medium"));
+
+        // Core Bond Funds
+        fundsList.add(new MutualFund("BND", "Vanguard Total Bond Market ETF", "Low"));
+        fundsList.add(new MutualFund("AGG", "iShares Core US Aggregate Bond ETF", "Low"));
+        fundsList.add(new MutualFund("FBND", "Fidelity Total Bond ETF", "Low"));
+        fundsList.add(new MutualFund("SCHZ", "Schwab US Aggregate Bond ETF", "Low"));
+        fundsList.add(new MutualFund("JCBUX", "JPMorgan Core Bond Fund", "Low"));
+        fundsList.add(new MutualFund("BAGIX", "Baird Aggregate Bond Fund", "Low"));
+        fundsList.add(new MutualFund("DODIX", "Dodge & Cox Income Fund", "Low"));
+
+        // Intermediate Core Bond Funds
+        fundsList.add(new MutualFund("VCOBX", "Vanguard Core Bond Fund", "Low"));
+        fundsList.add(new MutualFund("FBNDX", "Fidelity Investment Grade Bond Fund", "Low"));
+        fundsList.add(new MutualFund("CBFYX", "Columbia Bond Fund", "Low"));
+        fundsList.add(new MutualFund("WTRIX", "Allspring Core Bond Fund", "Low"));
+        fundsList.add(new MutualFund("NRCRX", "Neuberger Berman Core Bond Fund", "Low"));
+
+        // Specialized Bond Funds
+        fundsList.add(new MutualFund("VCLT", "Vanguard Long-Term Corporate Bond ETF", "Medium"));
+        fundsList.add(new MutualFund("PRFRX", "T. Rowe Price Floating Rate Fund", "Medium"));
+        fundsList.add(new MutualFund("HSNFX", "Hartford Strategic Income Fund", "Medium"));
+        fundsList.add(new MutualFund("APDFX", "Artisan High Income Fund", "High"));
+
+        // Municipal Bond Funds (Tax-Exempt)
+        fundsList.add(new MutualFund("VTEB", "Vanguard Tax-Exempt Bond ETF", "Low"));
+        fundsList.add(new MutualFund("VWIUX", "Vanguard Intermediate-Term Tax-Exempt Fund", "Low"));
+        fundsList.add(new MutualFund("TEAFX", "American Funds Tax-Exempt Bond Fund", "Low"));
+        fundsList.add(new MutualFund("AHMFX", "American High-Income Municipal Bond Fund", "Medium"));
+
         return fundsList;
     }
     
