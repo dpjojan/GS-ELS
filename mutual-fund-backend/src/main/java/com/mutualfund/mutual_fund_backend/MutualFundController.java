@@ -1,6 +1,6 @@
 package com.mutualfund.mutual_fund_backend;
 
-import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
@@ -36,10 +36,14 @@ public class MutualFundController {
     @Autowired
     private GeminiService geminiService;
 
-    // when frontend requests mutual funds, return this list of hardcoded funds
+    @Autowired
+    private MutualFundRepository mutualFundRepository;
+
+    // fetch funds from the database
     @GetMapping("/funds")
-    public ArrayList<MutualFund> getFunds() {
+    public List<MutualFund> getFunds() {
         log.info("GET /funds requested");
+<<<<<<< HEAD
         ArrayList<MutualFund> fundsList = new ArrayList<>();
         // Low Risk
         fundsList.add(new MutualFund("FZILX", "Fidelity ZERO International Index Fund", "Low"));
@@ -134,6 +138,9 @@ public class MutualFundController {
         fundsList.add(new MutualFund("AHMFX", "American High-Income Municipal Bond Fund", "Medium"));
 
         return fundsList;
+=======
+        return mutualFundRepository.findAll();
+>>>>>>> 64d4c59ee7292f387dcc1fc9c8672d7c369435d5
     }
     
     @GetMapping("/futureValAll")

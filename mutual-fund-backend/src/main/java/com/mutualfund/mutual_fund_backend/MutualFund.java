@@ -1,12 +1,19 @@
 package com.mutualfund.mutual_fund_backend;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+
 /**
  * Class for a mutual fund (includes ticker, name of fund)
  */
+@Entity
 public class MutualFund {
-    private String ticker; //the unique identifiable feature for each mutual fund (needed for Newton API)
+    @Id
+    private String ticker;
     private String name;
     private String risk;
+
+    public MutualFund() {}
 
     public MutualFund(String ticker, String name, String risk) {
         this.ticker = ticker;
