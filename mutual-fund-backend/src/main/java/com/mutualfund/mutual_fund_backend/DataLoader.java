@@ -1,5 +1,7 @@
 package com.mutualfund.mutual_fund_backend;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -7,70 +9,75 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 /**
- * Seeds the database with mutual funds on startup if the table is empty.
+ * Seeds bond funds and populates Fama-French betas for any that haven't been calculated yet.
  */
 @Component
 public class DataLoader implements CommandLineRunner {
+
+    private static final Logger log = LoggerFactory.getLogger(DataLoader.class);
 
     @Autowired
     private MutualFundRepository mutualFundRepository;
 
     @Override
     public void run(String... args) {
-        if (mutualFundRepository.count() > 0) return;
+        seedBondFunds();
+        new Thread(this::populateMissingBetas, "beta-loader").start();
+    }
 
-        mutualFundRepository.saveAll(List.of(
-            // Low Risk
-            new MutualFund("FZILX", "Fidelity ZERO International Index Fund", "Low"),
-            new MutualFund("PRDGX", "T. Rowe Price Dividend Growth Fund", "Low"),
-            new MutualFund("FSUTX", "Fidelity Select Utilities Portfolio", "Low"),
-            // Medium Risk
-            new MutualFund("VFIAX", "Vanguard 500 Index Fund Admiral", "Medium"),
-            new MutualFund("FXAIX", "Fidelity 500 Index Fund", "Medium"),
-            new MutualFund("DODGX", "Dodge & Cox Stock Fund", "Medium"),
-            new MutualFund("VDIGX", "Vanguard Dividend Growth Fund", "Medium"),
-            new MutualFund("AWSHX", "American Funds Washington Mutual", "Medium"),
-            new MutualFund("PRBLX", "Parnassus Core Equity Fund", "Medium"),
-            new MutualFund("JENSX", "Jensen Quality Growth Fund", "Medium"),
-            new MutualFund("GABAX", "Gabelli Asset Fund", "Medium"),
-            new MutualFund("CSIEX", "Calvert Equity Fund", "Medium"),
-            new MutualFund("SWPPX", "Schwab S&P 500 Index Fund", "Medium"),
-            new MutualFund("VTSAX", "Vanguard Total Stock Market Index Admiral", "Medium"),
-            new MutualFund("FSKAX", "Fidelity Total Market Index Fund", "Medium"),
-            new MutualFund("SWTSX", "Schwab Total Stock Market Index", "Medium"),
-            new MutualFund("VIMAX", "Vanguard Mid-Cap Index Admiral", "Medium"),
-            new MutualFund("VTIAX", "Vanguard Total International Stock Index", "Medium"),
-            new MutualFund("DODFX", "Dodge & Cox International Stock Fund", "Medium"),
-            new MutualFund("VTMGX", "Vanguard Developed Markets Index Admiral", "Medium"),
-            new MutualFund("VGHAX", "Vanguard Health Care Fund Admiral", "Medium"),
-            new MutualFund("VGSLX", "Vanguard Real Estate Index Admiral", "Medium"),
-            new MutualFund("AREEX", "American Century Real Estate Fund", "Medium"),
-            // High Risk
-            new MutualFund("VSMAX", "Vanguard Small-Cap Index Admiral", "High"),
-            new MutualFund("SWLGX", "Schwab Large Cap Growth Fund", "High"),
-            new MutualFund("TRBCX", "T. Rowe Price Blue Chip Growth", "High"),
-            new MutualFund("AGTHX", "American Funds Growth Fund of America", "High"),
-            new MutualFund("FCNTX", "Fidelity Contrafund", "High"),
-            new MutualFund("FDGRX", "Fidelity Growth Company Fund", "High"),
-            new MutualFund("PRGFX", "T. Rowe Price Growth Stock Fund", "High"),
-            new MutualFund("VIGAX", "Vanguard Growth Index Admiral", "High"),
-            new MutualFund("FMCSX", "Fidelity Mid-Cap Stock Fund", "High"),
-            new MutualFund("RPMGX", "T. Rowe Price Mid-Cap Growth Fund", "High"),
-            new MutualFund("RYTRX", "Royce Total Return Fund", "High"),
-            new MutualFund("BIASX", "Brown Advisory Small-Cap Growth", "High"),
-            new MutualFund("AEPGX", "American Funds EuroPacific Growth", "High"),
-            new MutualFund("FIGFX", "Fidelity International Growth Fund", "High"),
-            new MutualFund("PRITX", "T. Rowe Price International Stock Fund", "High"),
-            new MutualFund("OAKIX", "Oakmark International Fund", "High"),
-            new MutualFund("MAPIX", "Matthews Asia Dividend Fund", "High"),
-            new MutualFund("BEXFX", "Baron Emerging Markets Fund", "High"),
-            new MutualFund("FEMKX", "Fidelity Emerging Markets Fund", "High"),
-            new MutualFund("FSPTX", "Fidelity Select Technology Portfolio", "High"),
-            new MutualFund("FSPHX", "Fidelity Select Health Care Portfolio", "High"),
-            new MutualFund("PRHSX", "T. Rowe Price Health Sciences Fund", "High"),
-            new MutualFund("VGELX", "Vanguard Energy Fund Admiral", "High"),
-            new MutualFund("FIDSX", "Fidelity Select Financial Services", "High"),
-            new MutualFund("BREIX", "Baron Real Estate Fund", "High")
-        ));
+    private void seedBondFunds() {
+        List<MutualFund> bondFunds = List.of(
+            new MutualFund("BND",   "Vanguard Total Bond Market ETF",             "Low"),
+            new MutualFund("AGG",   "iShares Core U.S. Aggregate Bond ETF",       "Low"),
+            new MutualFund("FBND",  "Fidelity Total Bond ETF",                    "Low"),
+            new MutualFund("SCHZ",  "Schwab U.S. Aggregate Bond ETF",             "Low"),
+            new MutualFund("JCBUX", "JPMorgan Core Bond Fund",                    "Low"),
+            new MutualFund("BAGIX", "Baird Aggregate Bond Fund",                  "Low"),
+            new MutualFund("DODIX", "Dodge & Cox Income Fund",                    "Low"),
+            new MutualFund("VCOBX", "Vanguard Core Bond Fund",                    "Low"),
+            new MutualFund("FBNDX", "Fidelity Investment Grade Bond Fund",        "Low"),
+            new MutualFund("CBFYX", "Columbia Bond Fund",                         "Low"),
+            new MutualFund("WTRIX", "Western Asset Core Bond Fund",               "Low"),
+            new MutualFund("NRCRX", "Neuberger Berman Core Bond Fund",            "Low"),
+            new MutualFund("VCLT",  "Vanguard Long-Term Corporate Bond ETF",      "Medium"),
+            new MutualFund("PRFRX", "T. Rowe Price Floating Rate Fund",           "Medium"),
+            new MutualFund("HSNFX", "Homestead Short-Term Bond Fund",             "Low"),
+            new MutualFund("APDFX", "American Funds Preservation Portfolio",      "Low"),
+            new MutualFund("VTEB",  "Vanguard Tax-Exempt Bond ETF",               "Low"),
+            new MutualFund("VWIUX", "Vanguard Intermediate-Term Tax-Exempt Fund", "Low"),
+            new MutualFund("TEAFX", "T. Rowe Price Tax-Free Income Fund",         "Low"),
+            new MutualFund("AHMFX", "American High Income Municipal Fund",        "Medium")
+        );
+        bondFunds.stream()
+            .filter(f -> !mutualFundRepository.existsById(f.getTicker()))
+            .forEach(mutualFundRepository::save);
+    }
+
+    private void populateMissingBetas() {
+        mutualFundRepository.findAll().stream()
+            .filter(f -> f.getBeta1() == null && isBondTicker(f.getTicker()))
+            .forEach(fund -> {
+                try {
+                    log.info("Fetching betas for bond fund {}", fund.getTicker());
+                    BondBetaData betaData = new BondBetaData(fund.getTicker());
+                    fund.setAlpha(betaData.getAlpha());
+                    fund.setBeta1(betaData.getBeta1());
+                    fund.setBeta2(betaData.getBeta2());
+                    mutualFundRepository.save(fund);
+                    log.info("Saved betas for {} - alpha={}, beta1={}, beta2={}",
+                            fund.getTicker(), fund.getAlpha(), fund.getBeta1(), fund.getBeta2());
+                } catch (Exception e) {
+                    log.error("Failed to fetch betas for {}: {}", fund.getTicker(), e.getMessage());
+                }
+            });
+    }
+
+    private boolean isBondTicker(String ticker) {
+        return switch (ticker) {
+            case "BND","AGG","FBND","SCHZ","JCBUX","BAGIX","DODIX",
+                 "VCOBX","FBNDX","CBFYX","WTRIX","NRCRX","VCLT",
+                 "PRFRX","HSNFX","APDFX","VTEB","VWIUX","TEAFX","AHMFX" -> true;
+            default -> false;
+        };
     }
 }

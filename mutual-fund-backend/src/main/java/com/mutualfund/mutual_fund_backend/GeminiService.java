@@ -15,6 +15,8 @@ import java.util.Optional;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @Service
 public class GeminiService {
@@ -27,78 +29,26 @@ public class GeminiService {
     @Autowired
     private MutualFundService mutualFundService;
 
-    //  All funds your backend supports
-    private static final List<MutualFund> ALL_FUNDS = List.of(
-    // Low Risk
-    new MutualFund("FZILX", "Fidelity ZERO International Index Fund", "Low"),
-    new MutualFund("PRDGX", "T. Rowe Price Dividend Growth Fund", "Low"),
-    new MutualFund("FSUTX", "Fidelity Select Utilities Portfolio", "Low"),
-    // Medium Risk
-    new MutualFund("VFIAX", "Vanguard 500 Index Fund Admiral", "Medium"),
-    new MutualFund("FXAIX", "Fidelity 500 Index Fund", "Medium"),
-    new MutualFund("DODGX", "Dodge & Cox Stock Fund", "Medium"),
-    new MutualFund("VDIGX", "Vanguard Dividend Growth Fund", "Medium"),
-    new MutualFund("AWSHX", "American Funds Washington Mutual", "Medium"),
-    new MutualFund("PRBLX", "Parnassus Core Equity Fund", "Medium"),
-    new MutualFund("JENSX", "Jensen Quality Growth Fund", "Medium"),
-    new MutualFund("GABAX", "Gabelli Asset Fund", "Medium"),
-    new MutualFund("CSIEX", "Calvert Equity Fund", "Medium"),
-    new MutualFund("SWPPX", "Schwab S&P 500 Index Fund", "Medium"),
-    new MutualFund("VTSAX", "Vanguard Total Stock Market Index Admiral", "Medium"),
-    new MutualFund("FSKAX", "Fidelity Total Market Index Fund", "Medium"),
-    new MutualFund("SWTSX", "Schwab Total Stock Market Index", "Medium"),
-    new MutualFund("VIMAX", "Vanguard Mid-Cap Index Admiral", "Medium"),
-    new MutualFund("VTIAX", "Vanguard Total International Stock Index", "Medium"),
-    new MutualFund("DODFX", "Dodge & Cox International Stock Fund", "Medium"),
-    new MutualFund("VTMGX", "Vanguard Developed Markets Index Admiral", "Medium"),
-    new MutualFund("VGHAX", "Vanguard Health Care Fund Admiral", "Medium"),
-    new MutualFund("VGSLX", "Vanguard Real Estate Index Admiral", "Medium"),
-    new MutualFund("AREEX", "American Century Real Estate Fund", "Medium"),
-    // High Risk
-    new MutualFund("VSMAX", "Vanguard Small-Cap Index Admiral", "High"),
-    new MutualFund("SWLGX", "Schwab Large Cap Growth Fund", "High"),
-    new MutualFund("TRBCX", "T. Rowe Price Blue Chip Growth", "High"),
-    new MutualFund("AGTHX", "American Funds Growth Fund of America", "High"),
-    new MutualFund("FCNTX", "Fidelity Contrafund", "High"),
-    new MutualFund("FDGRX", "Fidelity Growth Company Fund", "High"),
-    new MutualFund("PRGFX", "T. Rowe Price Growth Stock Fund", "High"),
-    new MutualFund("VIGAX", "Vanguard Growth Index Admiral", "High"),
-    new MutualFund("FMCSX", "Fidelity Mid-Cap Stock Fund", "High"),
-    new MutualFund("RPMGX", "T. Rowe Price Mid-Cap Growth Fund", "High"),
-    new MutualFund("RYTRX", "Royce Total Return Fund", "High"),
-    new MutualFund("BIASX", "Brown Advisory Small-Cap Growth", "High"),
-    new MutualFund("AEPGX", "American Funds EuroPacific Growth", "High"),
-    new MutualFund("FIGFX", "Fidelity International Growth Fund", "High"),
-    new MutualFund("PRITX", "T. Rowe Price International Stock Fund", "High"),
-    new MutualFund("OAKIX", "Oakmark International Fund", "High"),
-    new MutualFund("MAPIX", "Matthews Asia Dividend Fund", "High"),
-    new MutualFund("BEXFX", "Baron Emerging Markets Fund", "High"),
-    new MutualFund("FEMKX", "Fidelity Emerging Markets Fund", "High"),
-    new MutualFund("FSPTX", "Fidelity Select Technology Portfolio", "High"),
-    new MutualFund("FSPHX", "Fidelity Select Health Care Portfolio", "High"),
-    new MutualFund("PRHSX", "T. Rowe Price Health Sciences Fund", "High"),
-    new MutualFund("VGELX", "Vanguard Energy Fund Admiral", "High"),
-    new MutualFund("FIDSX", "Fidelity Select Financial Services", "High"),
-    new MutualFund("BREIX", "Baron Real Estate Fund", "High")
-);
+    @Autowired
+    private MutualFundRepository mutualFundRepository;
 
-    // Build the static fund catalogue context (sent with every request) 
+    // Build the fund catalogue context (sent with every request)
     private String buildFundCatalogueContext() {
-    StringBuilder sb = new StringBuilder();
-    sb.append("AVAILABLE FUNDS IN THIS APPLICATION:\n");
-    sb.append("(Ticker | Fund Name | Risk Level)\n");
-    for (MutualFund f : ALL_FUNDS) {
-        sb.append(f.getTicker()).append(" | ")
-          .append(f.getName()).append(" | ")
-          .append(f.getRisk()).append("\n");
+        StringBuilder sb = new StringBuilder();
+        sb.append("AVAILABLE FUNDS IN THIS APPLICATION:\n");
+        sb.append("(Ticker | Fund Name | Risk Level)\n");
+        for (MutualFund f : mutualFundRepository.findAll()) {
+            sb.append(f.getTicker()).append(" | ")
+              .append(f.getName()).append(" | ")
+              .append(f.getRisk()).append("\n");
+        }
+        return sb.toString();
     }
-    return sb.toString();
-}
 
     // Detect any fund tickers mentioned in the user's message
     private List<MutualFund> detectMentionedFunds(String userMessage) {
         String upper = userMessage.toUpperCase();
-        return ALL_FUNDS.stream()
+        return mutualFundRepository.findAll().stream()
             .filter(f ->
                 upper.contains(f.getTicker()) ||
                 upper.contains(f.getName().toUpperCase())
@@ -160,34 +110,78 @@ than the market, beta < 1 means less volatile.
 
         log.debug("Full prompt sent to Gemini:\n{}", fullPrompt);
 
-        // 4. Call Gemini
+        // 4. Call Gemini with tool support
         try {
-            String body = """
-                {"contents":[{"parts":[{"text":"%s"}]}]}
-                """.formatted(fullPrompt.replace("\"", "\\\"").replace("\n", "\\n"));
-
-            HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(
-                    "https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=" + apiKey
-                ))
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(body))
-                .build();
-
-            HttpResponse<String> response =
-                HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
-
             ObjectMapper mapper = new ObjectMapper();
-            JsonNode root = mapper.readTree(response.body());
-            String output = root
-                .path("candidates").get(0)
-                .path("content")
-                .path("parts").get(0)
-                .path("text")
-                .asText();
+            HttpClient client = HttpClient.newHttpClient();
 
-            log.info("Gemini responded successfully");
-            return output;
+            // Tool definitions for Gemini
+            String toolsJson = """
+                [{"functionDeclarations":[
+                  {"name":"get_expected_return",
+                   "description":"Gets the historical expected annual return rate for a mutual fund ticker.",
+                   "parameters":{"type":"object","properties":{"ticker":{"type":"string","description":"Fund ticker symbol"}},"required":["ticker"]}},
+                  {"name":"get_future_value",
+                   "description":"Projects the future value of an investment year by year.",
+                   "parameters":{"type":"object","properties":{"ticker":{"type":"string"},"principal":{"type":"number","description":"Initial investment in dollars"},"years":{"type":"integer","description":"Number of years"}},"required":["ticker","principal","years"]}}
+                ]}]""";
+
+            // Build the initial contents array
+            ArrayNode contents = (ArrayNode) mapper.readTree(
+                "[{\"role\":\"user\",\"parts\":[{\"text\":\"\"}]}]");
+            ((ObjectNode) contents.get(0).path("parts").get(0)).put("text", fullPrompt);
+
+            // Loop: Gemini may call tools before giving a final text answer
+            for (int turn = 0; turn < 5; turn++) {
+                String body = String.format("{\"contents\":%s,\"tools\":%s}",
+                    mapper.writeValueAsString(contents), toolsJson);
+
+                HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + apiKey))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(body))
+                    .build();
+
+                JsonNode root = mapper.readTree(client.send(request, HttpResponse.BodyHandlers.ofString()).body());
+                JsonNode content = root.path("candidates").get(0).path("content");
+                JsonNode parts = content.path("parts");
+
+                // If Gemini called a tool, execute it and send the result back
+                if (parts.get(0).has("functionCall")) {
+                    contents.add(content); // append model turn
+                    ArrayNode toolResults = mapper.createArrayNode();
+                    for (JsonNode part : parts) {
+                        String fn   = part.path("functionCall").path("name").asText();
+                        JsonNode args = part.path("functionCall").path("args");
+                        log.info("Gemini called tool: {} args={}", fn, args);
+
+                        String result;
+                        if ("get_expected_return".equals(fn)) {
+                            double rate = mutualFundService.getExpectedReturn(args.path("ticker").asText());
+                            result = String.format("%.4f (%.2f%%)", rate, rate * 100);
+                        } else if ("get_future_value".equals(fn)) {
+                            List<Double> vals = mutualFundService.calculateFutureValAllYears(
+                                args.path("ticker").asText(), args.path("principal").asDouble(), args.path("years").asInt());
+                            StringBuilder sb = new StringBuilder();
+                            for (int i = 0; i < vals.size(); i++) sb.append(String.format("Year %d: $%.2f\n", i + 1, vals.get(i)));
+                            result = sb.toString();
+                        } else { result = "Unknown tool: " + fn; }
+
+                        ObjectNode fr = mapper.createObjectNode();
+                        fr.put("name", fn);
+                        fr.set("response", mapper.createObjectNode().put("result", result));
+                        toolResults.add(mapper.createObjectNode().set("functionResponse", fr));
+                    }
+                    ObjectNode toolTurn = mapper.createObjectNode();
+                    toolTurn.put("role", "user");
+                    toolTurn.set("parts", toolResults);
+                    contents.add(toolTurn);
+                } else {
+                    log.info("Gemini responded successfully");
+                    return parts.get(0).path("text").asText();
+                }
+            }
+            return "Unable to complete the request.";
 
         } catch (Exception e) {
             log.error("Gemini API call failed: {}", e.getMessage());

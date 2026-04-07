@@ -2,9 +2,11 @@ package com.mutualfund.mutual_fund_backend;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.Set;
+import jakarta.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -19,64 +21,74 @@ import java.util.Optional;
 public class MutualFundService {
 
     private static final Logger log = LoggerFactory.getLogger(MutualFundService.class);
-    // bond fund list
-    private static final Set<String> BOND_FUNDS = Set.of("BND","AGG", "FBND", "SCHZ", "JCBUX", "BAGIX", "DODIX","VCOBX","FBNDX","CBFYX","WTRIX","NRCRX","VCLT","PRFRX","HSNFX","APDFX","VTEB","VWIUX","TEAFX","AHMFX"); 
     private final NewtonStockBetaClient newtonStockBetaClient = new NewtonStockBetaClient();
     private final Map<String, Double> rateCache = new ConcurrentHashMap<>();
 
+    @Value("${fred.api.key}")
+    private String fredApiKey;
+
+    @Autowired
+    private MutualFundRepository mutualFundRepository;
+
+    private FredTreasuryClient fredTreasuryClient;
+
+    @PostConstruct
+    public void init() {
+        fredTreasuryClient = new FredTreasuryClient(fredApiKey);
+    }
+
     public List<Double> calculateFutureValAllYears(String ticker, double principal, int years) {
+        MutualFund fund = mutualFundRepository.findById(ticker)
+                .orElseThrow(() -> new RuntimeException("Fund not found: " + ticker));
         double rate;
         List<Double> results = new ArrayList<>();
-        if (isBondFund(ticker)) {
-            rate = getbondrate(ticker);
+        if (isBondFund(fund)) {
+            rate = getbondrate(fund);
             log.info("Calculating future value for bond fund {} - principal={}, years={}", ticker, principal, years);
-            }
-        else {
+        } else {
             rate = getrate(ticker);
             log.info("calculateFutureValAllYears - ticker={}, principal={}, years={}", ticker, principal, years);
-            }
-        for (int y = 1; y <= years; y++) {
-            if (isBondFund(ticker)) {
-                results.add(principal * Math.pow(1 + (rate/12), 12 * y));
-            } 
-            else {
-                results.add(principal * Math.exp(rate * y));
-                }
-            }
-        return results;
         }
-
-    private boolean isBondFund(String ticker) {
-        return BOND_FUNDS.contains(ticker);
+        for (int y = 1; y <= years; y++) {
+            if (isBondFund(fund)) {
+                results.add(principal * Math.pow(1 + (rate / 12), 12 * y));
+            } else {
+                results.add(principal * Math.exp(rate * y));
+            }
+        }
+        return results;
     }
-                
+
+    private boolean isBondFund(MutualFund fund) {
+        return fund.getBeta1() != null;
+    }
+
     private double getrate(String ticker) {
         return rateCache.computeIfAbsent(ticker, t -> {
             log.info("Rate cache miss for {} - fetching rate", t);
+            double riskFreeRate = fredTreasuryClient.getRiskFreeRate().orElse(0.049);
             double beta = getBetaFromNewtonApi(t).orElse(1.0);
-            double rate = 0.049 + beta * (calculateExpectedReturnRate(t) - 0.049);
-            log.info("Computed rate for {} - beta={}, rate={}", t, beta, rate);
+            double rate = riskFreeRate + beta * (calculateExpectedReturnRate(t) - riskFreeRate);
+            log.info("Computed rate for {} - riskFreeRate={}, beta={}, rate={}", t, riskFreeRate, beta, rate);
             return rate;
         });
     }
 
-        private double getbondrate(String ticker) {
-            // pull from database
-            
-            double yFloor = 0.042; //getFloor(ticker);
-            double yCeiling = 0.058; //getCeiling(ticker);
-            double floorDuration = 3.0; //getDurationForFloor(ticker);
-            double ceilingDuration = 7.0; //getDurationForCeiling(ticker);
-            double trueDuration = 5.0; //getDuration(ticker);
-            
-            // in case duration is exactly on floor or ceiling, avoid division by zero and just use the corresponding rate
-            if (ceilingDuration == floorDuration) {
-                return yFloor;
-            }
-            else {
-                return yFloor + ((yCeiling - yFloor) * ((trueDuration - floorDuration) / (ceilingDuration - floorDuration)));
-                }
-        }
+    private double getbondrate(MutualFund fund) {
+        double termFactor    = fredTreasuryClient.getTermFactor().orElse(0.015);
+        double creditFactor  = fredTreasuryClient.getCreditFactor().orElse(0.010);
+        // regression was run on monthly returns, so Ri is a monthly rate
+        double monthlyRate   = fund.getAlpha() + fund.getBeta1() * termFactor + fund.getBeta2() * creditFactor;
+        // annualize so the compounding formula (1 + rate/12)^12t works correctly
+        double annualRate    = Math.pow(1 + monthlyRate, 12) - 1;
+        log.info("Fama-French bond rate for {} - alpha={}, beta1={}, beta2={}, term={}, credit={}, monthlyRate={}, annualRate={}",
+                fund.getTicker(), fund.getAlpha(), fund.getBeta1(), fund.getBeta2(), termFactor, creditFactor, monthlyRate, annualRate);
+        return annualRate;
+    }
+
+    public double getExpectedReturn(String ticker) {
+        return calculateExpectedReturnRate(ticker);
+    }
 
     private double calculateExpectedReturnRate(String ticker) {
         try {
